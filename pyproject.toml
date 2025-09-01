@@ -15,10 +15,11 @@ dependencies = [
     "pydantic",
     "torch",
     "sentence-transformers",
+    "PyPDF2",
 ]
 
 [project.optional-dependencies]
-dev = ["ruff", "pytest", "pytest-cov", "jupyter"]
+dev = ["ruff", "pytest", "pytest-cov", "jupyter", "reportlab"]
 
 [tool.ruff]
 line-length = 88
