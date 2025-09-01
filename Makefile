@@ -33,6 +33,7 @@ embed: ## Build FAISS index from raw docs
 run: ## Run API (FastAPI/uvicorn)
 	uvicorn src.api.main:app --reload
 
-clean: ## Remove build, cache, and FAISS index
-	rm -rf __pycache__ .ruff_cache .pytest_cache $(FAISS_INDEX_DIR)
+clean: ## Remove build artifacts, caches, and FAISS index
+	find . -name "__pycache__" -type d -exec rm -rf {} + -o -name "*.pyc" -type f -delete
+	rm -rf .ruff_cache .pytest_cache $(FAISS_INDEX_DIR)
 

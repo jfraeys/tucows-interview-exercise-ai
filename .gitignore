@@ -7,6 +7,7 @@ __pycache__/
 *.pyo
 .venv/
 .env
+.coverage
 
 # Ignore temporary files
 *.log
@@ -20,4 +21,6 @@ __pycache__/
 build/
 dist/
 *.egg-info/
+
+# ignore
 

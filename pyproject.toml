@@ -15,7 +15,7 @@ dependencies = [
     "pydantic",
     "torch",
     "sentence-transformers",
-    "PyPDF2",
+    "pypdf",
 ]
 
 [project.optional-dependencies]
@@ -25,4 +25,5 @@ dev = ["ruff", "pytest", "pytest-cov", "jupyter", "reportlab"]
 line-length = 88
 
 [tool.pytest.ini_options]
-addopts = "-ra -q --cov=my_rag_api"
+addopts = "-ra -q --cov=src --cov-report=term-missing tests/"
+
