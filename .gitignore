@@ -1,0 +1,23 @@
+# Ignore raw docs in prod
+data/raw/
+
+# Ignore Python caches and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+.env
+
+# Ignore temporary files
+*.log
+*.tmp
+.DS_Store
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Docker / build artifacts
+build/
+dist/
+*.egg-info/
+

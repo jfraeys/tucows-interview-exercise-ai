@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "my_rag_api"
+version = "0.1.0"
+description = "API with RAG backend"
+authors = [{ name = "Jeremie Fraeys", email = "jfraeys@gmail.com" }]
+dependencies = [
+    "fastapi",
+    "faiss-cpu",
+    "llama-cpp-python",
+    "uvicorn",
+    "pydantic",
+    "torch",
+    "sentence-transformers",
+]
+
+[project.optional-dependencies]
+dev = ["ruff", "pytest", "pytest-cov", "jupyter"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.pytest.ini_options]
+addopts = "-ra -q --cov=my_rag_api"
