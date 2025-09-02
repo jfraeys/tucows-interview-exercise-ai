@@ -19,7 +19,7 @@ dev: ## Install dev dependencies
 	$(PYTHON) -m pip install .[dev]
 
 test: ## Run unit tests
-	$(PYTHON) -m pytest $(TEST_DIR)
+	$(PYTHON) -m pytest -v $(TEST_DIR) -s
 
 lint: ## Lint with ruff check
 	ruff check $(SRC_DIR) $(TEST_DIR)
