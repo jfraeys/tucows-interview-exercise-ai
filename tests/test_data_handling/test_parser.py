@@ -58,7 +58,7 @@ def tiny_pdf(tmp_path):
 def empty_section_txt(tmp_path):
     path = tmp_path / "empty_section.txt"
     path.write_text(
-        "Q1: Empty question?\nA:\n\n" "Q2: Normal question?\nA: Normal answer."
+        "Q1: Empty question?\nA:\n\nQ2: Normal question?\nA: Normal answer."
     )
     return path
 
