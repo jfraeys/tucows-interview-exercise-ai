@@ -208,7 +208,7 @@ def test_parsers(doc_fixture, request) -> None:
 # ---------------------------
 
 
-def test_empty_section(empty_section_txt):
+def test_empty_section(empty_section_txt) -> None:
     """Test handling of empty answers in FAQ format"""
     response: ParserResponse = parse_file(str(empty_section_txt))
 
@@ -221,7 +221,7 @@ def test_empty_section(empty_section_txt):
     assert chunk.metadata.section == "Q2: Normal question?"
 
 
-def test_text_before_subsection(text_before_subsection_md):
+def test_text_before_subsection(text_before_subsection_md) -> None:
     """Test that text before subsections is captured correctly"""
     response: ParserResponse = parse_file(str(text_before_subsection_md))
 
@@ -246,7 +246,7 @@ def empty_file_txt(tmp_path):
     return path
 
 
-def test_bullet_points_preservation(bullet_points_md):
+def test_bullet_points_preservation(bullet_points_md) -> None:
     """Test that bullet points and lists are preserved"""
     response: ParserResponse = parse_file(str(bullet_points_md))
 
@@ -274,7 +274,7 @@ def test_unsupported_file_type(tmp_path):
     with pytest.raises(ValueError) as exc_info:
         parse_file(str(unsupported_file))
 
-    assert "Unsupported file type: .unsupported" in str(exc_info.value)
+    assert "Unsupported file type '.unsupported'" in str(exc_info.value)
 
 
 def test_file_extension_override(tiny_txt):
