@@ -15,15 +15,22 @@ dependencies = [
     "pydantic",
     "torch",
     "sentence-transformers",
+    "tf-keras",
     "pypdf",
 ]
 
 [project.optional-dependencies]
-dev = ["ruff", "pytest", "pytest-cov", "jupyter", "reportlab"]
+dev = [
+    "ruff",
+    "pytest",
+    "pytest-cov",
+    "jupyter",
+    "reportlab",
+    "huggingface-hub",
+]
 
 [tool.ruff]
 line-length = 88
 
 [tool.pytest.ini_options]
 addopts = "-ra -q --cov=src --cov-report=term-missing tests/"
-

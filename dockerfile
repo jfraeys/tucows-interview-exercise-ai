@@ -13,9 +13,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies
-COPY requirements.txt requirements.txt
+COPY Makefile Makefile
+COPY pyproject.toml pyproject.toml
 RUN pip install --upgrade pip
-RUN pip install --no-cache-dir -r requirements.txt
+RUN make install
 
 # ===== Stage 2: Runtime =====
 FROM python:3.12-slim
@@ -35,7 +36,10 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY src/ src/
 
 # Copy pre-embedded FAISS index and support docs
-COPY data/ data/
+COPY data/faiss_index/ data/faiss_index/
+
+# Copy models
+COPY models/ models/
 
 # Expose API
 EXPOSE 8000

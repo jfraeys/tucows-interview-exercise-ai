@@ -1,5 +1,4 @@
 ---
-version: "3.9"
 services:
   rag-api:
     build: .
@@ -7,5 +6,5 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data:/app/data # Mount pre-embedded FAISS index and docs
+      - ./data/faiss_index/:/app/data # Mount pre-embedded FAISS index and docs
     restart: unless-stopped
