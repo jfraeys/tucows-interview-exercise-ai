@@ -5,7 +5,6 @@ This module implements a RAG pipeline that combines vector-based document retrie
 with large language model generation to provide contextually relevant answers.
 """
 
-import argparse
 import asyncio
 import json
 
@@ -87,6 +86,18 @@ class RetrievalQA:
             logger.error(f"Failed to parse LLM output as JSON: {output}")
             raise RuntimeError("Invalid JSON output from LLM") from e
 
+    async def warmup(self) -> None:
+        """
+        Warm up the LLM to reduce initial latency.
+        Sends a dummy prompt to trigger model loading into memory.
+        """
+        try:
+            dummy_prompt = "Warmup prompt: Say 'ready'."
+            await self.llm.generate(dummy_prompt, stop_sequences=self.stop_sequences)
+            logger.info("LLM warmup completed successfully.")
+        except Exception as e:
+            logger.warning(f"LLM warmup failed (ignored): {e}")
+
     async def answer(self, query: str) -> dict[str, str]:
         if not query or not query.strip():
             raise ValueError("Query cannot be empty or whitespace-only")
@@ -144,107 +155,30 @@ class RetrievalQA:
             raise RuntimeError(f"Failed to generate response: {e}") from e
 
 
-def _create_argument_parser() -> argparse.ArgumentParser:
-    """
-    Create and configure the command-line argument parser.
-
-    Supports two model loading modes:
-    - Local file: --model-path
-    - Hugging Face Hub: --model-repo + --model-filename
-
-    Returns:
-        Configured ArgumentParser instance
-    """
-    parser = argparse.ArgumentParser(
-        description="Run RAG-based question answering with configurable LLM backend",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-            Examples:
-              # Using local model file
-              python script.py --model-path ./models/llama-7b-q8_0.gguf --n-gpu-layers 32
-
-              # Using Hugging Face model
-              python script.py --model-repo microsoft/DialoGPT-medium --model-filename "*q8_0.gguf"
-        """,
-    )
-
-    # Model source configuration (mutually exclusive groups would be better here)
-    parser.add_argument(
-        "--model-path",
-        type=str,
-        help="Path to local LLM model file (GGUF format)",
-        metavar="PATH",
-    )
-    parser.add_argument(
-        "--model-repo",
-        type=str,
-        help="Hugging Face repository ID for pre-trained model",
-        metavar="REPO_ID",
-    )
-    parser.add_argument(
-        "--model-filename",
-        type=str,
-        help="Filename pattern for GGUF file in HF repo (e.g., '*q8_0.gguf')",
-        metavar="PATTERN",
-    )
-
-    parser.add_argument(
-        "--index-path",
-        type=str,
-        default=INDEX_PATH,
-        help="Path to FAISS index file",
-        metavar="PATH",
-    )
-    parser.add_argument(
-        "--metadata-path",
-        type=str,
-        default=METADATA_PATH,
-        help="Path to metadata JSON file for vector store",
-        metavar="PATH",
-    )
-
-    # Performance and runtime configuration
-    parser.add_argument(
-        "--n-gpu-layers",
-        type=int,
-        default=0,
-        help="Number of model layers to offload to GPU (0=CPU only, -1=auto)",
-        metavar="N",
-    )
-    parser.add_argument(
-        "--verbose",
-        action="store_true",
-        help="Enable detailed logging and debug output",
-    )
-
-    # user query input (for future extension)
-    parser.add_argument(
-        "--query",
-        "-q",
-        type=str,
-        help="User query to process (if not provided, a default example is used)",
-        metavar="TEXT",
-    )
-    return parser
-
-
-def _initialize_components(
-    model_path: str,
-    model_repo: str,
-    model_filename: str,
+def initialize_rag(
     index_path: str,
     metadata_path: str,
     n_gpu_layers: int,
+    model_path: str | None = None,
+    model_repo: str | None = None,
+    model_filename: str | None = None,
 ) -> tuple[retrieval.VectorStore, llm_wrapper.LLMWrapper]:
     """
-    Initialize the vector store and LLM wrapper based on configuration.
+    Initialize the vector store and LLM wrapper based on configuration. Validates input arguments.
 
     Args:
-        args: Validated command-line arguments
+        model_path: Local filesystem path to the LLM model file (GGUF format)
+        model_repo: Hugging Face repository ID for the model (if not using local file)
+        model_filename: Filename pattern for the GGUF file in the HF repo
+        index_path: Path to the FAISS index file for the vector store
+        metadata_path: Path to the metadata JSON file for the vector store
+        n_gpu_layers: Number of model layers to offload to GPU (-1 for auto, 0 for CPU only)
 
     Returns:
         Tuple of (VectorStore, LLMWrapper) instances
     """
+    validate_helper.validate_model_arguments(model_path, model_repo, model_filename)
+
     # Initialize vector store with pre-built FAISS index
     vectorstore = retrieval.VectorStore(
         index_path=index_path,
@@ -264,61 +198,3 @@ def _initialize_components(
         )
 
     return vectorstore, llm
-
-
-async def main() -> None:
-    """
-    Main application entry point.
-
-    Orchestrates the complete RAG pipeline:
-    1. Parse and validate command-line arguments
-    2. Initialize vector store and language model
-    3. Create RAG system and process example query
-    4. Display results
-    """
-    # Parse and validate command-line configuration
-    parser = _create_argument_parser()
-    args = parser.parse_args()
-    validate_helper.validate_model_arguments(
-        args.model_path, args.model_repo, args.model_filename
-    )
-
-    try:
-        # Initialize core RAG components
-        vectorstore, llm = _initialize_components(
-            args.model_path,
-            args.model_repo,
-            args.model_filename,
-            args.index_path,
-            args.metadata_path,
-            args.n_gpu_layers,
-        )
-
-        # Create the RAG question-answering system
-        qa_system = RetrievalQA(
-            vectorstore=vectorstore,
-            llm=llm,
-            top_k=10,  # Retrieve top 3 most relevant chunks
-        )
-
-        # Process example query (TODO: Make this configurable)
-        example_query = "How do I reactivate a suspended domain?"
-
-        user_query = args.query if args.query else example_query
-
-        if args.verbose:
-            logger.info(f"Processing query: {user_query}")
-            logger.info("Retrieving relevant context and generating answer...")
-
-        # Generate answer using the RAG pipeline
-        answer = await qa_system.answer(user_query)
-
-        logger.info("LLM Answer:\n\n%s", json.dumps(answer, indent=2))
-    except Exception as e:
-        logger.exception(f"Error during RAG processing: {e}")
-        raise
-
-
-if __name__ == "__main__":
-    # Run the async main function with proper event loop handling
-    asyncio.run(main())

@@ -47,13 +47,13 @@ format: ## Format code with ruff format
 	ruff format $(SRC_DIR) $(TEST_DIR)
 
 embed: ## Build FAISS index from raw docs
-	$(PYTHON) -m src.data_handling.embed_docs
+	$(PYTHON) -m cli embed --documents-path=$(RAW_DATA_DIR)
 
 run: ## Run API (FastAPI/uvicorn)
 	uvicorn  src.api.main:app --reload
 
 run_local:
-	$(PYTHON) -m src.core.rag_pipeline --model-repo=microsoft/Phi-3-mini-4k-instruct-gguf --model-filename=Phi-3-mini-4k-instruct-fp16.gguf --n-gpu-layers=-1
+	$(PYTHON) -m cli query --model-repo=microsoft/Phi-3-mini-4k-instruct-gguf --model-filename=Phi-3-mini-4k-instruct-fp16.gguf --n-gpu-layers=-1
 
 clean: ## Remove build artifacts, caches, and FAISS index
 	find . -name "__pycache__" -type d -exec rm -rf {} + -o -name "*.pyc" -type f -delete

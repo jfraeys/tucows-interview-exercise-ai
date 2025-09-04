@@ -80,12 +80,16 @@ class LLMWrapper:
         verbose: bool,
     ) -> Llama:
         """Load model using appropriate method."""
-        kwargs = {"n_ctx": n_ctx, "n_gpu_layers": n_gpu_layers, "verbose": verbose}
 
         if model_path:
             if not Path(model_path).exists():
                 raise FileNotFoundError(f"Model file not found: {model_path}")
-            return Llama(model_path=model_path, **kwargs)
+            return Llama(
+                model_path=model_path,
+                n_ctx=n_ctx,
+                n_gpu_layers=n_gpu_layers,
+                verbose=verbose,
+            )
 
         if not filename or not repo_id:
             raise ValueError("Both repo_id and filename are required for HF models")
@@ -94,12 +98,22 @@ class LLMWrapper:
         cached_path = os.path.join(self.local_dir, filename)
         if os.path.exists(cached_path):
             logger.info(f"Loading cached model: {cached_path}")
-            return Llama(model_path=str(cached_path), **kwargs)
+            return Llama(
+                model_path=str(cached_path),
+                n_ctx=n_ctx,
+                n_gpu_layers=n_gpu_layers,
+                verbose=verbose,
+            )
 
         # Download from Hugging Face
         logger.info(f"Downloading model {repo_id}/{filename}")
         return Llama.from_pretrained(
-            repo_id=repo_id, filename=filename, local_dir=str(self.local_dir), **kwargs
+            repo_id=repo_id,
+            filename=filename,
+            local_dir=str(self.local_dir),
+            n_ctx=n_ctx,
+            n_gpu_layers=n_gpu_layers,
+            verbose=verbose,
         )
 
     async def generate(
@@ -126,13 +140,13 @@ class LLMWrapper:
         if not prompt.strip():
             raise ValueError("Prompt cannot be empty")
 
-        kwargs = {
-            "prompt": prompt,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-            "stop": stop_sequences or [],
-            "echo": False,
-        }
-
-        return await asyncio.to_thread(self.model, **kwargs)
+        return await asyncio.to_thread(
+            self.model.create_completion,
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            stop=stop_sequences,
+            echo=False,
+            stream=False,  # ensures the return type is CreateCompletionResponse
+        )

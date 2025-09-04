@@ -181,46 +181,52 @@ def save_index_and_metadata(
         raise RuntimeError(f"Failed to save metadata: {e}")
 
 
-def main(model_name: str) -> None:
+def build_embeddings(
+    documents_path: str,
+    index_path: str,
+    metadata_path: str,
+    embedding_model: str = "all-MiniLM-L6-v2",
+) -> None:
     """
-    Main pipeline: load docs → embed → index → save.
-    """
-    try:
-        logger.info(f"Starting embedding pipeline with model: {model_name}")
+    High-level function to build embeddings and save index and metadata.
+    This function can be called from other scripts or notebooks.
 
-        # Load and parse all documents
-        parser_response = load_documents(DOCS_DIR)
+    Args:
+        documents_path: Path to directory containing source documents
+        index_path: Path where FAISS index directory should be created
+        metadata_path: Filename for metadata file (saved in index directory)
+        # chunk_size: Size of text chunks for processing (currently unused)
+        # chunk_overlap: Overlap between chunks (currently unused)
+        embedding_model: Name of SentenceTransformer model to use
+
+    Raises:
+        FileNotFoundError: If documents directory doesn't exist
+        ValueError: If no documents were processed
+        RuntimeError: If any step in the process fails
+    """
+    docs_dir = Path(documents_path)
+    index_dir = Path(index_path)
+    metadata_file = index_dir / metadata_path
+    index_file = index_dir / "faiss.index"
+
+    try:
+        # Load and parse documents
+        parser_response = load_documents(docs_dir)
 
         # Extract text content for embedding
         texts = [chunk.text for chunk in parser_response.chunks]
 
         # Generate embeddings
-        embeddings = embed_texts(texts, model_name)
+        embeddings = embed_texts(texts, embedding_model)
 
         # Build search index
         index = build_faiss_index(embeddings)
 
         # Save everything to disk
-        save_index_and_metadata(index, parser_response, INDEX_FILE, METADATA_FILE)
+        save_index_and_metadata(index, parser_response, index_file, metadata_file)
 
-        logger.info("Pipeline completed successfully!")
+        logger.info(f"Embedding build completed: {index.ntotal} vectors saved")
 
     except Exception as e:
-        logger.error(f"Pipeline failed: {e}")
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Embed support documents and create FAISS index for similarity search"
-    )
-
-    parser.add_argument(
-        "--model",
-        type=str,
-        default="all-MiniLM-L6-v2",
-        help="SentenceTransformer model name (e.g., all-MiniLM-L6-v2, all-mpnet-base-v2)",
-    )
-
-    args = parser.parse_args()
-    main(args.model)
+        logger.error(f"Failed to build embeddings: {e}")
+        raise
