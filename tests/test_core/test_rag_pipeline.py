@@ -106,7 +106,7 @@ class TestRetrievalQA:
             result = await rag.answer("test query")
 
             assert result["answer"] == "Generated answer"
-            vectorstore.search.assert_called_once_with("test query", top_k=3)
+            vectorstore.search.assert_called_once_with("test query", top_k=2)
             llm.generate.assert_called_once()
 
 

@@ -44,7 +44,7 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/resolve-ticket", response_model=models.TicketResponse)
-async def resolve_ticket(ticket: models.TicketRequest):
+async def resolve_ticket(ticket: models.TicketRequest) -> models.TicketResponse:
     """
     Resolve a support ticket using RetrievalQA.
     Only accepts JSON input matching {"ticket_text": "message"}.
@@ -74,3 +74,13 @@ async def resolve_ticket(ticket: models.TicketRequest):
     except Exception as e:
         logger.exception(f"Failed to resolve ticket: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+def main():
+    """Entry point for the knowledge-assistant CLI command."""
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+if __name__ == "__main__":
+    main()

@@ -3,10 +3,11 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "my_rag_api"
+name = "ticket-assistant"
 version = "0.1.0"
-description = "API with RAG backend"
+description = "Knowledge Assistant RAG API for customer support"
 authors = [{ name = "Jeremie Fraeys", email = "jfraeys@gmail.com" }]
+
 dependencies = [
     "fastapi",
     "faiss-cpu",
@@ -35,3 +36,10 @@ line-length = 88
 
 [tool.pytest.ini_options]
 addopts = "-ra -q --cov=src --cov-report=term-missing tests/"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[project.scripts]
+ticket-assistant = "src.api.main:main"
