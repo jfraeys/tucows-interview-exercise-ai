@@ -27,13 +27,15 @@ endif
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
+venv: ## Create a virtual environment
+	$(PYTHON) -m venv $(VENV)
 
-install: ## Install runtime dependencies with hardware acceleration
+install: venv ## Install runtime dependencies with hardware acceleration
 	@echo "Installing with LLAMA_BACKEND=$(CMAKE_ARGS)"
 	$(PYTHON) -m pip install --upgrade pip setuptools wheel
 	CMAKE_ARGS="$(CMAKE_ARGS)" $(PYTHON) -m pip install -e .
 
-dev: ## Install dev dependencies with hardware acceleration
+dev: venv ## Install dev dependencies with hardware acceleration
 	@echo "Installing dev dependencies with LLAMA_BACKEND=$(LLAMA_BACKEND)"
 	$(PYTHON) -m pip install --upgrade pip setuptools wheel
 	CMAKE_ARGS="$(CMAKE_ARGS)" $(PYTHON) -m pip install -e ".[dev]" --upgrade --force-reinstall --no-cache-dir
