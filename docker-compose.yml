@@ -1,7 +1,7 @@
 ---
 services:
   ticket-assistant:
-    build: .
+    image: tucows-interview-exercise-ai:latest
     container_name: ticket_assistant
     ports:
       - "8000:8000"
