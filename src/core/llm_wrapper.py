@@ -5,9 +5,10 @@ Clean interface for loading and running GGUF models with proper async handling.
 """
 
 import asyncio
+import errno
 import os
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from llama_cpp import CreateCompletionResponse, Llama
 
@@ -19,6 +20,12 @@ DEFAULT_MODEL_DIR = "./models"
 DeviceMode = Literal["cpu", "gpu", "auto"]
 
 
+N_CTX_DEFAULT = 4096
+MAX_TOKENS_DEFAULT = 300
+TEMPERATURE_DEFAULT = 0.2
+TOP_P_DEFAULT = 1.0
+
+
 class LLMWrapper:
     """
     Async wrapper for llama-cpp-python with device management.
@@ -28,10 +35,10 @@ class LLMWrapper:
 
     def __init__(
         self,
-        model_path: str | None = None,
+        model_path: Path | None = None,
         repo_id: str | None = None,
         filename: str | None = None,
-        n_ctx: int = 4096,
+        n_ctx: int = N_CTX_DEFAULT,
         n_gpu_layers: int = 0,
         device_mode: DeviceMode = "auto",
         local_dir: str = DEFAULT_MODEL_DIR,
@@ -70,9 +77,30 @@ class LLMWrapper:
             return "cpu"
         return device_mode
 
+    def _ensure_local_directory(self) -> None:
+        """Ensure the local directory exists for model storage."""
+        try:
+            os.makedirs(self.local_dir, exist_ok=True)
+            logger.info(f"Ensured local model directory exists: {self.local_dir}")
+        except OSError as e:
+            if e.errno == errno.EACCES:
+                logger.error(
+                    f"Permission denied while creating directory: {self.local_dir}"
+                )
+                raise PermissionError(
+                    f"Cannot create local model directory due to permissions: {self.local_dir}"
+                ) from e
+            else:
+                logger.error(
+                    f"Failed to create local model directory: {self.local_dir} - {e}"
+                )
+                raise RuntimeError(
+                    f"Could not create local model directory: {self.local_dir}"
+                ) from e
+
     def _load_model(
         self,
-        model_path: str | None,
+        model_path: Path | None,
         repo_id: str | None,
         filename: str | None,
         n_ctx: int,
@@ -80,17 +108,21 @@ class LLMWrapper:
         verbose: bool,
     ) -> Llama:
         """Load model using appropriate method."""
+        # Always ensure directory exists first (even for local models)
+        self._ensure_local_directory()
 
+        # Load local model if path provided
         if model_path:
             if not Path(model_path).exists():
                 raise FileNotFoundError(f"Model file not found: {model_path}")
             return Llama(
-                model_path=model_path,
+                model_path=str(model_path),
                 n_ctx=n_ctx,
                 n_gpu_layers=n_gpu_layers,
                 verbose=verbose,
             )
 
+        # Handle HuggingFace models
         if not filename or not repo_id:
             raise ValueError("Both repo_id and filename are required for HF models")
 
@@ -119,10 +151,12 @@ class LLMWrapper:
     async def generate(
         self,
         prompt: str,
-        max_tokens: int = 200,
-        temperature: float = 0.2,
-        top_p: float = 1.0,
-        stop_sequences: Optional[list[str]] = None,
+        max_tokens: int = MAX_TOKENS_DEFAULT,
+        temperature: float = TEMPERATURE_DEFAULT,
+        top_p: float = TOP_P_DEFAULT,
+        stop_sequences: list[str] | None = None,
+        echo: bool = False,
+        stream: bool = False,  # ensures the return type is CreateCompletionResponse
     ) -> CreateCompletionResponse:
         """
         Generate text from prompt with async handling.
@@ -147,6 +181,6 @@ class LLMWrapper:
             temperature=temperature,
             top_p=top_p,
             stop=stop_sequences,
-            echo=False,
-            stream=False,  # ensures the return type is CreateCompletionResponse
+            echo=echo,
+            stream=stream,
         )
