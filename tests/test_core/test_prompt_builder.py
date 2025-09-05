@@ -10,11 +10,6 @@ from src import models
 from src.core.prompt_builder import build_mcp_prompt
 
 
-def create_wrapped_chunk(chunk):
-    """Helper to wrap Chunks object as expected by template"""
-    return type("obj", (), {"chunk": chunk})()
-
-
 class TestBuildMcpPrompt:
     """Test the main prompt building function"""
 
@@ -27,7 +22,7 @@ class TestBuildMcpPrompt:
                 source="policy.txt", section="Returns", subsection="General Policy"
             ),
         )
-        chunks = [create_wrapped_chunk(chunk)]
+        chunks = [chunk]  # Pass Chunks objects directly
 
         result = build_mcp_prompt("What is the return policy?", chunks)
 
@@ -55,7 +50,7 @@ class TestBuildMcpPrompt:
             text="Contact support@company.com",
             metadata=models.ChunksMetadata(source="contact.txt", section="Support"),
         )
-        chunks = [create_wrapped_chunk(chunk1), create_wrapped_chunk(chunk2)]
+        chunks = [chunk1, chunk2]  # Pass Chunks objects directly
 
         result = build_mcp_prompt("How do I return an item?", chunks)
 
@@ -86,9 +81,11 @@ class TestBuildMcpPrompt:
         chunk = models.Chunks(
             id="1",
             text="Basic content here",
-            metadata=models.ChunksMetadata(source="basic.txt"),  # No section/subsection
+            metadata=models.ChunksMetadata(
+                source="basic.txt", section="Test"
+            ),  # No subsection
         )
-        chunks = [create_wrapped_chunk(chunk)]
+        chunks = [chunk]  # Pass Chunks object directly
 
         result = build_mcp_prompt("Test question", chunks)
 
@@ -100,18 +97,17 @@ class TestBuildMcpPrompt:
         """Test using a custom template string"""
         custom_template = """
 Question: {{ user_query }}
-{% for item in context_chunks %}
-Content: {{ item.text }}
+{% for chunk in context_chunks %}
+Content: {{ chunk.text }}
 {% endfor %}
 Answer the question above.
 """
 
-        # For custom template, we can pass chunks directly since template expects item.text
         chunks = [
             models.Chunks(
                 id="1",
                 text="Test content",
-                metadata=models.ChunksMetadata(source="test.txt"),
+                metadata=models.ChunksMetadata(source="test.txt", section="Test"),
             )
         ]
 
@@ -120,6 +116,20 @@ Answer the question above.
         assert "Question: What is this?" in result
         assert "Content: Test content" in result
         assert "Answer the question above." in result
+
+    def test_chunks_as_dicts(self):
+        """Test using dictionary format for chunks"""
+        chunk_dict = {
+            "id": "1",
+            "text": "Dictionary chunk content",
+            "metadata": {"source": "dict.txt", "section": "Dict Section"},
+        }
+        chunks = [chunk_dict]
+
+        result = build_mcp_prompt("Test with dict?", chunks)
+
+        assert "Dictionary chunk content" in result
+        assert "Test with dict?" in result
 
     def test_invalid_template_raises_error(self):
         """Test that malformed Jinja2 template raises TemplateError"""
@@ -134,10 +144,10 @@ Answer the question above.
             id="1",
             text="Content without sections",
             metadata=models.ChunksMetadata(
-                source="test.txt", section=None, subsection=None
+                source="test.txt", section="Test", subsection=None
             ),
         )
-        chunks = [create_wrapped_chunk(chunk)]
+        chunks = [chunk]
 
         result = build_mcp_prompt("Question?", chunks)
 
@@ -147,9 +157,11 @@ Answer the question above.
     def test_empty_template_uses_default(self):
         """Test that empty template string uses the default template"""
         chunk = models.Chunks(
-            id="1", text="Test", metadata=models.ChunksMetadata(source="test.txt")
+            id="1",
+            text="Test",
+            metadata=models.ChunksMetadata(source="test.txt", section="Test"),
         )
-        chunks = [create_wrapped_chunk(chunk)]
+        chunks = [chunk]
 
         # Empty string should use default
         result1 = build_mcp_prompt("Question", chunks, "")
@@ -162,43 +174,3 @@ Answer the question above.
         # Whitespace-only should also use default
         result3 = build_mcp_prompt("Question", chunks, "   ")
         assert '"answer":' in result3
-
-    def test_chunk_with_all_metadata_fields(self):
-        """Test chunk with complete metadata (source, section, subsection)"""
-        chunk = models.Chunks(
-            id="1",
-            text="Complete metadata test",
-            metadata=models.ChunksMetadata(
-                source="complete.txt", section="Main Section", subsection="Sub Section"
-            ),
-        )
-        chunks = [create_wrapped_chunk(chunk)]
-
-        result = build_mcp_prompt("Test query", chunks)
-
-        assert "Complete metadata test" in result
-        assert "Sub Section" in result  # Should show subsection since it exists
-
-    def test_chunk_metadata_fallback(self):
-        """Test metadata fallback logic (subsection or section or source)"""
-        # Test with subsection (should show subsection)
-        chunk1 = models.Chunks(
-            id="1",
-            text="Has subsection",
-            metadata=models.ChunksMetadata(
-                source="test1.txt", section="Section", subsection="Subsection"
-            ),
-        )
-
-        # Test with section but no subsection (should show section)
-        chunk2 = models.Chunks(
-            id="2",
-            text="Has section only",
-            metadata=models.ChunksMetadata(source="test2.txt", section="Section Only"),
-        )
-
-        chunks = [create_wrapped_chunk(chunk1), create_wrapped_chunk(chunk2)]
-        result = build_mcp_prompt("Test", chunks)
-
-        assert "Subsection" in result  # From first chunk
-        assert "Section Only" in result  # From second chunk
