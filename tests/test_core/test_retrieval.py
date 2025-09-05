@@ -77,7 +77,7 @@ class TestVectorStore:
         ):
             # Test with each valid device type
             device: DeviceType = "cuda"  # Type-safe assignment
-            vs = VectorStore(
+            VectorStore(
                 "test.index", "test.json", model_name="custom-model", device=device
             )
 

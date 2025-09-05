@@ -175,6 +175,33 @@ Containerize with **Docker** and orchestrate with **Docker Compose** for deploym
 
 ---
 
+## 11. Model Installation Strategy
+
+**Decision**:
+Do **not** automatically install or check for model availability during deployment or container startup.
+
+**Reasoning**:
+- Large language models (typically 2-8GB+) would significantly increase deployment time if downloaded automatically.
+- In production environments, downloading models during startup could cause:
+  - Extended container startup times (5-15+ minutes)
+  - Network bandwidth consumption
+  - Deployment failures due to timeouts
+  - Unpredictable resource usage
+- Pre-installed models or explicit model management provides better control over deployment timing and resource allocation.
+
+**Implementation**:
+- The system expects models to be pre-installed or mounted via volumes.
+- Clear documentation guides users to install models locally before running the server.
+- Docker deployments use volume mounts for model persistence and sharing.
+- Graceful error handling when models are missing, with clear instructions for resolution.
+
+**Trade-offs**:
+- Requires manual model management by operators.
+- Initial setup is more complex for first-time users.
+- However, this approach ensures predictable, fast deployments suitable for production environments.
+
+---
+
 ## Disclaimer on AI Assistance
 
 An AI assistant contributed to planning, decision-making, research, and generating code for testing. All final choices, implementations, and code were reviewed and validated by the project author. The AI was used as a supportive tool, not the sole source of technical decisions or production code.

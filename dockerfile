@@ -34,11 +34,16 @@ WORKDIR /app
 # Minimal runtime dependencies
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
+    libgomp1 \
+    libopenblas0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy installed package from builder
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy source code
+COPY --from=builder /app/src /app/src
 
 # Copy pre-embedded FAISS index and support docs
 COPY data/faiss_index/ data/faiss_index/
@@ -53,6 +58,6 @@ USER appuser
 # Expose API
 EXPOSE 8000
 
-# Start using the installed package command
-CMD ["ticket-assistant"]
+# Start using uvicorn directly to avoid model download issues
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
 

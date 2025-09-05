@@ -49,18 +49,6 @@ A Retrieval-Augmented Generation (RAG) system for customer support, designed to 
     make dev
     ```
 
------
-
-## Docker Installation
-
-Use docker-compose for containerized deployment:
-
-```bash
-docker-compose up --build
-```
-
------
-
 ## ⚠️ IMPORTANT: First-Time Setup
 
 **Before running the server for the first time**, you MUST build the FAISS index from the raw documents:
@@ -71,29 +59,22 @@ make embed
 
 This creates the vector embeddings required for document retrieval. Without this step, the server will fail to start with a `FileNotFoundError: FAISS index not found`.
 
-### Troubleshooting
-
-#### Build Failures
-
-If `llama-cpp-python` fails to build (common on ARM64/Apple Silicon):
-
-- The Dockerfile includes fallback mechanisms for ARM64 compatibility
-- If issues persist, try building without Docker using `make install` instead
-
-#### System Requirements
-
-- **Python:** 3.11+
-- **Docker:** For containerized deployment
-- **Recommended:** 20GB+ for comfortable development
-
 ### Quick Start (First Time)
-```bash
-# Complete first-time setup
-make setup
 
-# Or run manually:
+**For first-time setup, use `make run_local` to automatically download and install the LLM model:**
+
+```bash
+# First time - downloads model and runs CLI
+make run_local
+
+# After model is installed, you can use other commands:
 make embed    # Build FAISS index (required!)
 make run      # Start development server
+```
+
+**Alternative complete setup:**
+```bash
+make setup    # Build FAISS index and start server
 ```
 4.  Run API locally
     ```bash
