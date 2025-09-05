@@ -6,6 +6,15 @@ REQUIRED_KEYS = {
     "action_required": "none",
 }
 
+VALID_ACTION_REQUIRED_VALUES = {
+    "none",
+    "escalate_to_abuse_team", 
+    "escalate_to_billing",
+    "escalate_to_technical",
+    "follow_up_required",
+    "more_info_needed"
+}
+
 
 def enforce_schema(parsed: dict[str, Any], required: dict[str, Any]) -> dict[str, Any]:
     """
@@ -26,5 +35,20 @@ def enforce_schema(parsed: dict[str, Any], required: dict[str, Any]) -> dict[str
     return parsed
 
 
-def enforce_ticket_schema(output: str) -> dict[str, Any]:
-    return enforce_schema(output, REQUIRED_KEYS)
+def enforce_ticket_schema(parsed: dict[str, Any]) -> dict[str, Any]:
+    """
+    Enforce the ticket schema and validate action_required values.
+    
+    Args:
+        parsed: Dictionary parsed from LLM JSON output
+        
+    Returns:
+        Dictionary with validated schema
+    """
+    result = enforce_schema(parsed, REQUIRED_KEYS)
+    
+    # Validate action_required value
+    if result["action_required"] not in VALID_ACTION_REQUIRED_VALUES:
+        result["action_required"] = "none"  # Default to safe value
+        
+    return result
