@@ -1,5 +1,8 @@
+from pathlib import Path
+
+
 def validate_model_arguments(
-    model_path: str | None, model_repo: str | None, model_filename: str | None
+    model_path: Path | None, model_repo: str | None, model_filename: str | None
 ) -> None:
     """
     Validate model configuration arguments for logical consistency.

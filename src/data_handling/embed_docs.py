@@ -182,9 +182,9 @@ def save_index_and_metadata(
 
 
 def build_embeddings(
-    documents_path: str,
-    index_path: str,
-    metadata_path: str,
+    documents_path: Path,
+    index_file: Path,
+    metadata_file: Path,
     embedding_model: str = "all-MiniLM-L6-v2",
 ) -> None:
     """
@@ -204,14 +204,10 @@ def build_embeddings(
         ValueError: If no documents were processed
         RuntimeError: If any step in the process fails
     """
-    docs_dir = Path(documents_path)
-    index_dir = Path(index_path)
-    metadata_file = index_dir / metadata_path
-    index_file = index_dir / "faiss.index"
 
     try:
         # Load and parse documents
-        parser_response = load_documents(docs_dir)
+        parser_response = load_documents(documents_path)
 
         # Extract text content for embedding
         texts = [chunk.text for chunk in parser_response.chunks]
