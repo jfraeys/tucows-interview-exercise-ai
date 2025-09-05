@@ -81,14 +81,14 @@ def _add_query_args(parser: argparse.ArgumentParser) -> None:
     # Index paths
     parser.add_argument(
         "--index-path",
-        type=str,
+        type=Path,
         default=INDEX_PATH,
         help="Path to FAISS index file",
         metavar="PATH",
     )
     parser.add_argument(
         "--metadata-path",
-        type=str,
+        type=Path,
         default=METADATA_PATH,
         help="Path to metadata JSON file for vector store",
         metavar="PATH",
@@ -114,7 +114,7 @@ def _add_query_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--top-k",
         type=int,
-        default=10,
+        default=5,
         help="Number of most relevant chunks to retrieve (default: 10)",
         metavar="N",
     )
@@ -131,21 +131,21 @@ def _add_embed_args(parser: argparse.ArgumentParser) -> None:
     """Add arguments for the embed subcommand."""
     parser.add_argument(
         "--documents-path",
-        type=str,
+        type=Path,
         required=True,
         help="Path to documents directory to embed",
         metavar="PATH",
     )
     parser.add_argument(
         "--index-path",
-        type=str,
+        type=Path,
         default=INDEX_PATH,
         help="Output path for FAISS index file",
         metavar="PATH",
     )
     parser.add_argument(
         "--metadata-path",
-        type=str,
+        type=Path,
         default=METADATA_PATH,
         help="Output path for metadata JSON file",
         metavar="PATH",
@@ -248,9 +248,9 @@ async def handle_embed_command(args) -> None:
 
         # Build embeddings using your existing embed_docs module
         build_embeddings(
-            documents_path=str(docs_path),
-            index_path=args.index_path,
-            metadata_path=args.metadata_path,
+            documents_path=docs_path,
+            index_file=args.index_path,
+            metadata_file=args.metadata_path,
             embedding_model=args.embedding_model,
         )
 

@@ -177,12 +177,7 @@ Containerize with **Docker** and orchestrate with **Docker Compose** for deploym
 
 ## Disclaimer on AI Assistance
 
-Throughout this project, an AI assistant was used to support planning, decision-making, and research. Specifically, the AI contributed to:
-
-- Evaluating and comparing different technologies, frameworks, and LLM options.
-- Suggesting trade-offs, best practices, and alternative approaches for RAG pipelines.
-- Providing references, example code snippets, and architectural inspiration.
-- Structuring documentation, diagrams, and decision records for clarity.
+An AI assistant contributed to planning, decision-making, research, and generating code for testing. All final choices, implementations, and code were reviewed and validated by the project author. The AI was used as a supportive tool, not the sole source of technical decisions or production code.
 
 All final choices, implementations, and code were reviewed and validated by the project author. The AI was used as a planning and research aid, not as the sole source of technical decisions or code production.
 

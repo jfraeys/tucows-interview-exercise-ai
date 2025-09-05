@@ -69,10 +69,13 @@ The system:
 
 ---
 
-## 6. Future Enhancements
+## **Future Enhancements**
 
 - Hot-reload prompts and embeddings.
 - Human-in-the-loop evaluation and MLflow tracking for prompt optimization.
+- Add configuration files for easier experimentation with models and responses.
+- Reranking models for improved retrieval precision.
+- Hybrid retrieval (keyword + vector search).
 - Swap FAISS for cloud vector DBs for scaling.
 - Kubernetes deployment for high availability and scaling.
 - Observability with logging and metrics.
