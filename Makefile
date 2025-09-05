@@ -22,7 +22,7 @@ else
 endif
 
 
-.PHONY: help install dev test lint format embed run clean
+.PHONY: help install dev test lint format embed run clean docs-pdf
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -52,10 +52,44 @@ embed: ## Build FAISS index from raw docs
 run: ## Run API (FastAPI/uvicorn)
 	uvicorn  src.api.main:app --reload
 
+run_server: ## Run API server (FastAPI/uvicorn) without reload and with warning log level
+	ENV=prod GGML_LOG_LEVEL=ERROR \
+		uvicorn src.api.main:app \
+			--host 0.0.0.0 \
+			--port 8000 \
+			--log-level warning
+
 run_local:
-	$(PYTHON) -m cli query --model-repo=microsoft/Phi-3-mini-4k-instruct-gguf --model-filename=Phi-3-mini-4k-instruct-fp16.gguf --n-gpu-layers=-1
+	$(PYTHON) -m cli query \
+		--model-repo=microsoft/Phi-3-mini-4k-instruct-gguf \
+		--model-filename=Phi-3-mini-4k-instruct-fp16.gguf \
+		--n-gpu-layers=-1
 
 clean: ## Remove build artifacts, caches, and FAISS index
-	find . -name "__pycache__" -type d -exec rm -rf {} + -o -name "*.pyc" -type f -delete
-	rm -rf .ruff_cache .pytest_cache $(FAISS_INDEX_DIR)
+	find . \( -name "__pycache__" -type d -exec rm -rf {} + \) \
+		-o \( -name "*.pyc" -type f -delete \) \
+		-o \( -name ".coverage*" -type f -delete \)
+	rm -rf .ruff_cache .pytest_cache $(FAISS_INDEX_DIR) models
+
+docs-pdf: ## Convert docs/ markdown files to PDF with mermaid support
+	@echo "Converting documentation to PDF..."
+	@mkdir -p docs/output
+	@for md_file in docs/*.md; do \
+		if [ -f "$$md_file" ]; then \
+			base_name=$$(basename "$$md_file" .md); \
+			echo "Converting $$md_file to docs/output/$$base_name.pdf"; \
+			pandoc "$$md_file" \
+				--from markdown \
+				--to pdf \
+				--pdf-engine=xelatex \
+				--filter mermaid-filter \
+				--output "docs/output/$$base_name.pdf" \
+				--variable geometry:margin=1in \
+				--variable fontsize=11pt \
+				--variable colorlinks=true \
+				--toc \
+				2>/dev/null || echo "Warning: Failed to convert $$md_file (missing pandoc/mermaid-filter?)"; \
+		fi; \
+	done
+	@echo "PDF generation complete. Files saved to docs/output/"
 
