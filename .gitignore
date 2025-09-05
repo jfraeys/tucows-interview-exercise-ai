@@ -24,3 +24,7 @@ dist/
 
 # ignore
 
+# Generated files - do not commit
+data/faiss_index/
+models/
+*.gguf
