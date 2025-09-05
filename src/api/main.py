@@ -7,10 +7,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 
 import src.api.models as models
+from src.api import web_logger
 from src.core import RetrievalQA, initialize_rag
-from src.utils import logging_helper
 
-logger = logging_helper.get_logger(__name__)
+logger = web_logger.get_web_logger("logs/api.log")
+uvicorn_logger = web_logger.get_uvicorn_logger()
 
 INDEX_PATH = "data/faiss_index/faiss.index"
 METADATA_PATH = "data/faiss_index/metadata.json"
@@ -31,6 +32,7 @@ async def lifespan(app: FastAPI):
 
     # Warm up the LLM once before serving
     await app.state.rag.warmup()
+    uvicorn_logger.info("RAG system initialized and warmed up.")
 
     yield  # API runs here
 
@@ -58,7 +60,7 @@ async def resolve_ticket(ticket: models.TicketRequest):
         model_path=MODEL_PATH,
         n_gpu_layers=-1,
     )
-    rag_system = RetrievalQA(vectorstore=vectorstore, llm=llm, top_k=7)
+    rag_system = RetrievalQA(vectorstore=vectorstore, llm=llm, top_k=5)
 
     try:
         # Generate answer
