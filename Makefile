@@ -28,12 +28,16 @@ help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 
-install: ## Install runtime dependencies with hardware acceleration
+venv: ## Create a virtual environment
+	$(PYTHON) -m venv $(VENV)
+
+
+install: venv ## Install runtime dependencies with hardware acceleration
 	@echo "Installing with LLAMA_BACKEND=$(CMAKE_ARGS)"
 	$(PYTHON) -m pip install --upgrade pip setuptools wheel
 	CMAKE_ARGS="$(CMAKE_ARGS)" $(PYTHON) -m pip install -e .
 
-dev: ## Install dev dependencies with hardware acceleration
+dev: venv ## Install dev dependencies with hardware acceleration
 	@echo "Installing dev dependencies with LLAMA_BACKEND=$(LLAMA_BACKEND)"
 	$(PYTHON) -m pip install --upgrade pip setuptools wheel
 	CMAKE_ARGS="$(CMAKE_ARGS)" $(PYTHON) -m pip install -e ".[dev]" --upgrade --force-reinstall --no-cache-dir
@@ -51,7 +55,7 @@ embed: ## Build FAISS index from raw docs
 	$(PYTHON) -m cli embed --documents-path=$(RAW_DATA_DIR)
 
 # Check if FAISS index exists, build if needed
-check-index:
+check_index:
 	@if [ ! -f "$(FAISS_INDEX_DIR)/faiss.index" ]; then \
 		echo "🚀 FAISS index not found. Building from raw documents..."; \
 		$(PYTHON) -m cli embed --documents-path=$(RAW_DATA_DIR); \
@@ -92,6 +96,8 @@ run_custom: ## Run with custom model parameters
 clean: ## Remove build artifacts, caches, and FAISS index
 	@echo "🧹 Cleaning up build artifacts..."
 	find . \( -name "__pycache__" -type d -exec rm -rf {} + \) \
+		-o \( -name ".mypy_cache" -type d -exec rm -rf {} + \) \
+		-o \( -name "*.egg-info" -type d -exec rm -rf {} + \) \
 		-o \( -name "*.pyc" -type f -delete \) \
 		-o \( -name ".coverage*" -type f -delete \)
 	rm -rf .ruff_cache .pytest_cache $(FAISS_INDEX_DIR) models
