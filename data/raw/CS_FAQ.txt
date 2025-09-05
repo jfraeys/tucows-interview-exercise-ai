@@ -1,0 +1,41 @@
+Customer Support FAQ: Domain Reactivation
+
+Q1: Why was my domain suspended?
+A: There are several possible reasons:
+1. WHOIS contact details were invalid or not verified.
+2. The domain was flagged for abuse (spam, phishing, malware).
+3. Your payment method failed during renewal.
+
+Q2: How can I fix this?
+A:
+- Update your WHOIS details in the account dashboard.
+- Check your billing method and update payment details.
+- If you received an abuse warning, reply to the ticket or contact the Abuse Team.
+
+Q3: How long does it take for my domain to be reactivated?
+A: Normally within 24–48 hours once the issue is resolved.
+
+Q4: Who should I contact if I think this was a mistake?
+A: You should escalate the ticket to our Abuse Team, including:
+- Domain name
+- Ticket reference number
+- Any proof of compliance
+
+Q5: Can I reactivate my domain myself?
+A: For billing or WHOIS issues, yes. For abuse-related suspensions, you may need approval from the Abuse Team.
+
+Q6: Will my website be offline during suspension?
+A: Yes, suspended domains will not resolve to your website until the issue is resolved.
+
+Q7: Do I get notified before suspension?
+A: In most cases, we attempt to notify the registrant via email. However, missed notifications can happen due to invalid WHOIS contacts.
+
+Q8: What documents are required to verify my domain ownership?
+A: Valid ID, proof of business registration (if applicable), or confirmation emails from your account dashboard.
+
+Q9: What happens if I don’t resolve the suspension?
+A: The domain may enter redemption status and eventually be released to the public, depending on your registrar’s policy.
+
+Q10: Are there any fees associated with reactivation?
+A: Typically, standard renewal fees apply. Additional verification or late fees may apply if the suspension was due to billing issues.
+
